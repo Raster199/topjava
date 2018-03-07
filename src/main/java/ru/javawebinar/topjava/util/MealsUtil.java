@@ -6,6 +6,7 @@ import ru.javawebinar.topjava.model.MealWithExceed;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,7 +26,57 @@ public class MealsUtil {
     }
 
     public static List<MealWithExceed>  getFilteredWithExceeded(List<Meal> mealList, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
-        // TODO return filtered list with correctly exceeded field
-        return null;
+
+        List<Meal> userMeals = new ArrayList<Meal>();
+        List<MealWithExceed> userMealWithExceeds = new ArrayList<MealWithExceed>();
+        LocalDateTime date = null;
+        int sumCalories = 0;
+
+        for(int j = 0; j < mealList.size(); j++){
+            Meal meal = mealList.get(j);
+            LocalDateTime maelDate = meal.getDateTime();
+            if (date == null) {
+                date = meal.getDateTime();
+            }
+            if ((date.getDayOfYear() == maelDate.getDayOfYear()) && (j < mealList.size()-1)) {
+                date = maelDate;
+                sumCalories += meal.getCalories();
+
+                if ((maelDate.getHour() > startTime.getHour()) && (maelDate.getHour() < endTime.getHour())) {
+                    Meal userMeal = new Meal(maelDate, meal.getDescription(), meal.getCalories());
+                    userMeals.add(userMeal);
+                }
+            }else {
+                LocalDateTime dateExceed ;
+                if(j == mealList.size()-1){
+                    sumCalories += meal.getCalories();
+                }
+                if (sumCalories > caloriesPerDay){
+                    dateExceed = date;
+                }else {
+                    dateExceed = date.minusDays(10);
+                }
+                for(int i = 0; i < userMeals.size(); i++){
+                    Meal user = userMeals.get(i);
+                    if (user.getDateTime().getDayOfYear() == dateExceed.getDayOfYear()){
+                        MealWithExceed userMealWithExceed = new MealWithExceed(user.getDateTime(), user.getDescription(), user.getCalories(), true);
+                        userMealWithExceeds.add(userMealWithExceed);
+                    }else {
+                        MealWithExceed userMealWithExceed = new MealWithExceed(user.getDateTime(), user.getDescription(), user.getCalories(), false);
+                        userMealWithExceeds.add(userMealWithExceed);
+                    }
+                }
+                userMeals.clear();
+                date = maelDate;
+                sumCalories = 0;
+                sumCalories += meal.getCalories();
+                if ((maelDate.getHour() > startTime.getHour()) && (maelDate.getHour() < endTime.getHour())) {
+                    Meal userMeal = new Meal(maelDate, meal.getDescription(), meal.getCalories());
+                    userMeals.add(userMeal);
+                }
+            }
+        }
+        return userMealWithExceeds;
+
     }
 }
